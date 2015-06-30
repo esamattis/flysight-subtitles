@@ -1,0 +1,33 @@
+
+body, html, p, div, span {
+    padding: 0;
+    margin: 0;
+}
+
+
+.Main .Graph-container,
+.Main .Player-container {
+    position: absolute;
+    border: 1px solid black;
+}
+
+.Main .Graph-container {
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 50%
+}
+
+.Main .Player-container {
+    left: 0px;
+    right: 50%;
+    top: 50%;
+    bottom: 0px;
+}
+
+.Player, .Graph, .Graph-wrap {
+  width: 100%;
+  height: 100%;
+}
+
+

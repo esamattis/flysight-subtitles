@@ -6,6 +6,7 @@
     "objectLiteralShorthandMethods": true,
     "arrowFunctions": true,
     "blockBindings": true,
+    "modules": true,
     "generators": true
   },
   "plugins": [
