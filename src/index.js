@@ -4,10 +4,11 @@ import ReactDOM from "react-dom";
 import {createStore, applyMiddleware} from "redux";
 import {Provider} from "react-redux";
 
-import reducer from "./actions";
+import flysightReducer, {loadPreviousGPSData} from "./actions/flysight";
+import storageReducer, {restoreFromStorage, setStorageKey} from "./actions/storage";
 import Main from "./components/Main";
 
-import {thunkMiddleware} from "./utils";
+import {composeReducers, thunkMiddleware} from "./utils";
 
 
 const middleware = [thunkMiddleware];
@@ -17,7 +18,18 @@ if (process.env.NODE_ENV !== "production") {
     middleware.push(createLogger());
 }
 
-const store = createStore(reducer, applyMiddleware(...middleware));
+const store = createStore(
+    composeReducers(
+        flysightReducer,
+        storageReducer
+    ),
+    applyMiddleware(...middleware)
+);
+store.dispatch(setStorageKey("flysight"));
+store.dispatch(restoreFromStorage());
+setTimeout(() => {
+    store.dispatch(loadPreviousGPSData());
+}, 0);
 window.getState = store.getState;
 
 function Root() {

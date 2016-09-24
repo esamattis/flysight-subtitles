@@ -4,7 +4,7 @@ import React, {PropTypes} from "react";
 import ReactDOM from "react-dom";
 import Dygraph from "dygraphs";
 
-import {addFlysightProps} from "../actions";
+import {addFlysightProps} from "../actions/flysight";
 
 var Graph = React.createClass({
 
@@ -12,16 +12,18 @@ var Graph = React.createClass({
         gpsData: PropTypes.array.isRequired,
         graphPosition: PropTypes.number,
         setGraphExit: PropTypes.func.isRequired,
-        loadFlysightData: PropTypes.func.isRequired,
+        setRawGPSData: PropTypes.func.isRequired,
     },
 
     handleFile(e) {
-        this.props.loadFlysightData(e.target.files[0]);
+        var file = e.target.files[0];
+        var reader = new FileReader();
+        reader.onload = e => {
+            this.props.setRawGPSData(e.target.result);
+        };
+        reader.readAsText(file);
     },
 
-    renderFileInput() {
-        return <input type="file" accept=".csv" onChange={this.handleFile} />;
-    },
 
     createGraph() {
         console.log("creating graph el");
@@ -31,25 +33,26 @@ var Graph = React.createClass({
                 var syncPointIndex = get([0, "idx"], point);
                 this.props.setGraphExit({graphPosition: x / 1000, syncPointIndex});
             },
-            labels: [ "time", "altitude", "vert", "hor"],
+            labels: [ "time", "altitude", "fallrate", "ground speed"],
             series: {
-                vert: {
+                fallrate: {
                     axis: "y2",
                 },
-                hor: {
+                "ground speed": {
                     axis: "y2",
                 },
             },
-            axes: {
-                y2: {
-                    labelsKMB: true,
-                },
-            },
-            ylabel: "Primary y-axis",
-            y2label: "Secondary y-axis",
+            // axes: {
+            //     y2: {
+            //         labelsKMB: true,
+            //     },
+            // },
+            ylabel: "Altitude in meters",
+            y2label: "Ground speed km/h",
             errorBars: true,
         });
-        this.dygGraph.resize(1000, 600);
+        this.dygGraph.resize(1000, 400);
+        this.updateAnnotations();
     },
 
     resetZoom(e) {
@@ -57,54 +60,42 @@ var Graph = React.createClass({
         this.dygGraph.resetZoom();
     },
 
-
-    componentDidUpdate(prevProps) {
-        if (this.props.gpsData !== prevProps.gpsData) {
-            this.createGraph();
-        }
-
+    updateAnnotations() {
         var annotations = [];
 
         if (this.props.graphPosition) {
             annotations.push({
                 series: "altitude",
                 x: this.props.graphPosition * 1000,
-                width: 18,
-                height: 23,
-                tickHeight: 4,
-                shortText: "exit",
-                text: "Exit point",
+                width: 80,
+                height: 15,
+                tickHeight: 20,
+                shortText: "Exit Point",
+                text: "The moment you jumped out",
                 cssClass: "Graph-exit-point",
             });
         }
 
+        this.dygGraph.setAnnotations(annotations);
+    },
 
-        // if (this.props.videoPosOnGraph) {
-        //     annotations.push({
-        //         series: 'vert',
-        //         x: this.props.videoPosOnGraph * 1000,
-        //         width: 18,
-        //         height: 23,
-        //         tickHeight: 4,
-        //         shortText: "V",
-        //         text: "Video position",
-        //         cssClass: 'Graph-exit-point'
-        //     });
-        // }
-
-        if (this.props.graphPosition !== prevProps.graphPosition) {
-            this.dygGraph.setAnnotations(annotations);
+    componentDidUpdate(prevProps) {
+        if (this.props.gpsData !== prevProps.gpsData) {
+            this.createGraph();
         }
 
+        if (this.props.graphPosition !== prevProps.graphPosition) {
+            this.updateAnnotations();
+        }
 
     },
 
     render() {
-        if (this.props.gpsData.length === 0) return this.renderFileInput();
         return (
             <div className="Graph" >
                 <div className="Graph-wrap" ref="container">
                 </div>
+                <input type="file" accept=".csv" onChange={this.handleFile} />
                 <button onClick={this.resetZoom}>reset zoom</button>
                 <button onClick={this.props.generateSubrip}>generate</button>
             </div>

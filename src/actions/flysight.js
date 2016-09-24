@@ -1,5 +1,9 @@
 import {connect} from "react-redux";
+import update from "lodash/fp/update";
+import getOr from "lodash/fp/getOr";
+import get from "lodash/fp/get";
 import padStart from "lodash/padStart";
+import {createSelector} from "reselect";
 
 import Papa from "papaparse";
 import distance from "gps-distance";
@@ -21,10 +25,10 @@ function parseRow(row) {
     };
 }
 
-function parse(rawData) {
+function calculateFlysightData(csvRows) {
     var prev = null;
 
-    return rawData.slice(2, -1).map(row => {
+    return csvRows.slice(2, -1).map(row => {
         var point = parseRow(row);
         if (!prev) {
             prev = point;
@@ -61,12 +65,28 @@ function parse(rawData) {
 
 }
 
-function loadFlysightData(file) {
-    return (dispatch) => {
-        Papa.parse(file, {complete: (results) => {
+function parseCSVString(csvString) {
+    return dispatch => {
+        Papa.parse(csvString, {complete: (results) => {
             console.log("parse errors", results.errors);
-            dispatch({type: "SET_PARSED_GPS_DATA", gpsData: parse(results.data)});
+            dispatch({type: "SET_PARSED_GPS_DATA", gpsData: calculateFlysightData(results.data)});
         }});
+    };
+}
+
+export function setRawGPSData(csvString, options={}) {
+    window.localStorage.csvString = csvString;
+    return dispatch => {
+        dispatch({type: "CLEAR_ALL"});
+        dispatch(parseCSVString(csvString));
+    };
+}
+
+export function loadPreviousGPSData() {
+    return dispatch => {
+        if (window.localStorage.csvString) {
+            dispatch(parseCSVString(window.localStorage.csvString));
+        }
     };
 }
 
@@ -76,68 +96,77 @@ const fullSeconds = i => Math.floor((i - fullMinutes(i) * 60 * 1000) / 1000);
 const remainingMs = i => i % 1000;
 const formatSubripTime = i => `00:${padZero(2, fullMinutes(i))}:${padZero(2, fullSeconds(i))},${padZero(3, remainingMs(i))}`;
 
-function generateSubrip() {
-    console.log("generating");
-    return (dispatch, getState) => {
-        var {syncPointIndex, gpsData} = getState();
-        var videoExitMin = 1;
-        var videoExitSec = 10;
+export function addSubripProp() {
+    return connect(createSelector(
+        get(["inMemoryOnly", "gpsData"]),
+        get("syncPointIndex"),
+        generateSubrip
+    ));
+}
 
 
-        var subStart = videoExitMin * 60 * 1000 + videoExitSec * 1000; // in ms
-        var subNum = 0;
-        var prev = gpsData[syncPointIndex];
-        var subrip = "";
+function generateSubrip(gpsData, syncPointIndex) {
+    if (!gpsData || !syncPointIndex) {
+        return {subrip: ""};
+    }
 
-        while (subNum < 600) {
-            syncPointIndex++;
-            let point = gpsData[syncPointIndex];
-            let duration = point[0].getTime() - prev[0].getTime();
-            let subEnd = subStart + duration;
+    console.log("Generating subrip!");
+    var videoExitMin = 1;
+    var videoExitSec = 10;
 
-            let fallrate = prev[2][0];
-            let altitude = prev[1][0];
+    var subStart = videoExitMin * 60 * 1000 + videoExitSec * 1000; // in ms
+    var subNum = 0;
+    var prev = gpsData[syncPointIndex];
+    var subrip = "";
 
-            subNum++;
-            subrip += subNum;
-            subrip += "\n";
-            subrip += `${formatSubripTime(subStart)} --> ${formatSubripTime(subEnd)}`;
-            subrip += "\n";
-            subrip += padStart(fallrate.toFixed(1), 5, " ") + " km/h ";
-            subrip += padStart(Math.round(altitude), 4, " ") + " M";
-            subrip += "\n\n";
+    while (subNum < 600) {
+        syncPointIndex++;
+        let point = gpsData[syncPointIndex];
+        let duration = point[0].getTime() - prev[0].getTime();
+        let subEnd = subStart + duration;
 
-            prev = point;
-            subStart = subEnd;
-        }
+        let fallrate = prev[2][0];
+        let altitude = prev[1][0];
 
-        console.log(subrip);
-        prompt("copy", subrip);
+        subNum++;
+        subrip += subNum;
+        subrip += "\n";
+        subrip += `${formatSubripTime(subStart)} --> ${formatSubripTime(subEnd)}`;
+        subrip += "\n";
+        subrip += padStart(fallrate.toFixed(1), 5, " ") + " km/h ";
+        subrip += padStart(Math.round(altitude), 4, " ") + " M";
+        subrip += "\n\n";
 
+        prev = point;
+        subStart = subEnd;
+    }
 
-    };
-
+    return {subrip};
 }
 
 export function addFlysightProps() {
     return connect(
         state => ({
-            gpsData: state.gpsData,
+            gpsData: getOr([], ["inMemoryOnly", "gpsData"], state),
             graphPosition: state.graphPosition,
         }),
-        {loadFlysightData, setGraphExit, generateSubrip}
+        {setRawGPSData, setGraphExit, generateSubrip}
     );
 }
 
 export default function reducer(state={}, action) {
+    if (action.type === "CLEAR_ALL") {
+        return {};
+    }
+
     if (action.type === "SET_PARSED_GPS_DATA") {
-        return {...state, gpsData: action.gpsData};
+        return update(["inMemoryOnly", "gpsData"], () => action.gpsData, state);
     }
     if (action.type === "SET_GRAPH_EXIT") {
         return {...state, graphPosition: action.graphPosition, syncPointIndex: action.syncPointIndex};
     }
 
-    if (!state.gpsData) {
+    if (!state || !state.gpsData) {
         return {...state, gpsData: []};
     }
 
