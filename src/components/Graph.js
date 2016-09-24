@@ -91,13 +91,13 @@ var Graph = React.createClass({
     },
 
     render() {
+        var hasData = this.props.gpsData.length > 0;
         return (
             <div className="Graph" >
+                <input type="file" accept=".csv" onChange={this.handleFile} />
+                {hasData && <button onClick={this.resetZoom}>reset zoom</button>}
                 <div className="Graph-wrap" ref="container">
                 </div>
-                <input type="file" accept=".csv" onChange={this.handleFile} />
-                <button onClick={this.resetZoom}>reset zoom</button>
-                <button onClick={this.props.generateSubrip}>generate</button>
             </div>
         );
     },
