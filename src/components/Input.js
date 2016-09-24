@@ -6,7 +6,8 @@ import {connect} from "react-redux";
 
 var Input = React.createClass({
     render() {
-        return <input {...omit("stateKey", this.props)} />;
+        var Component = this.props.component || "input";
+        return <Component {...omit(["stateKey", "component"], this.props)} />;
     },
 });
 Input = connect(

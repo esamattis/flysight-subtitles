@@ -13,8 +13,22 @@ const fullSeconds = i => Math.floor((i - fullMinutes(i) * 60 * 1000) / 1000);
 const remainingMs = i => i % 1000;
 const formatSubripTime = i => `00:${padZero(2, fullMinutes(i))}:${padZero(2, fullSeconds(i))},${padZero(3, remainingMs(i))}`;
 
-function generateSubrip(gpsData, syncPointIndex, videoMinutes, videoSeconds, dropzoneElevation=0) {
+const defaultTemplate = `
+Fallrate FALLRATE km/h
+Altitude ALTITUDE m
+Ground speed GROUND_SPEED km/h
+Distance DISTANCE m
+`.trim();
+
+function renderTemplate(template, context) {
+    var keys = Object.keys(context);
+    var re = new RegExp(keys.join("|"), "g");
+    return template.replace(re, k => context[k]).trim();
+}
+
+function generateSubrip(template, gpsData, syncPointIndex, videoMinutes, videoSeconds, dropzoneElevation=0) {
     console.log("Generating subrip!");
+    template = String(template || "").trim() || defaultTemplate.trim();
     videoMinutes = parseInt(videoMinutes, 10);
     videoSeconds = parseFloat(videoSeconds, 10);
     dropzoneElevation = parseFloat(dropzoneElevation, 10);
@@ -51,19 +65,21 @@ function generateSubrip(gpsData, syncPointIndex, videoMinutes, videoSeconds, dro
         let point = gpsData[syncPointIndex];
         let duration = point[0].getTime() - prev[0].getTime();
         let subEnd = subStart + duration;
-
-        let fallrate = prev[2][0];
-        let altitude = prev[1][0] - dropzoneElevation;
-        let groundSpeed = prev[3][0];
-        let jumpDistance = 0;
         let totalDistance = point[4];
+
+        let templateContext = {
+            FALLRATE: Math.round(prev[2][0]),
+            ALTITUDE: Math.round(prev[1][0] - dropzoneElevation),
+            GROUND_SPEED: Math.round(prev[3][0]),
+            DISTANCE: 0,
+        };
 
         if (exitPointIndex === syncPointIndex) {
             distanceAtExit = totalDistance;
         }
 
         if (distanceAtExit !== null) {
-            jumpDistance = totalDistance - distanceAtExit;
+            templateContext.DISTANCE = Math.round(totalDistance - distanceAtExit);
         }
 
         subNum++;
@@ -71,13 +87,7 @@ function generateSubrip(gpsData, syncPointIndex, videoMinutes, videoSeconds, dro
         subrip += "\n";
         subrip += `${formatSubripTime(subStart)} --> ${formatSubripTime(subEnd)}`;
         subrip += "\n";
-        subrip += "Fallrate " + fallrate.toFixed(1) + " km/h";
-        subrip += "\n";
-        subrip += "Altitude " + Math.round(altitude) + " m";
-        subrip += "\n";
-        subrip += "Ground speed " + Math.round(groundSpeed) + " km/h";
-        subrip += "\n" ;
-        subrip += "Distance " + Math.round(jumpDistance) + " m";
+        subrip += renderTemplate(template, templateContext);
         subrip += "\n\n";
 
         prev = point;
@@ -95,6 +105,7 @@ var SubripView = React.createClass({
     handleGenerate(e) {
         e.preventDefault();
         var subtitleString = generateSubrip(
+            this.props.subtitleTemplate,
             this.props.gpsData,
             this.props.syncPointIndex,
             this.props.videoMinutes,
@@ -151,6 +162,20 @@ var SubripView = React.createClass({
                     <br />
                     <small>protip: You can see it from the graph</small>
 
+                    <p>
+                    Subtitle template
+                    </p>
+                    <Input
+                        stateKey="subtitleTemplate"
+                        style={{width: "100%"}}
+                        component="textarea"
+                        type="text"
+                        placeholder={defaultTemplate}
+                        rows="6"
+
+                       />
+                    <br />
+
                 </div>
 
                 <p>
@@ -194,6 +219,7 @@ SubripView = connect(
         videoSeconds: state.videoSeconds,
         dropzoneElevation: state.dropzoneElevation,
         filename: state.filename,
+        subtitleTemplate: state.subtitleTemplate,
         gpsData: getGpsData(state),
     })
 )(SubripView);
