@@ -51,7 +51,7 @@ var Graph = React.createClass({
             y2label: "Ground speed km/h",
             errorBars: true,
         });
-        this.dygGraph.resize(1000, 400);
+        this.dygGraph.resize(window.innerWidth, 350);
         this.updateAnnotations();
     },
 
