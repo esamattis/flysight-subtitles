@@ -125,7 +125,7 @@ var SubripView = React.createClass({
 
                 <div>
                     <p>
-                    Exit time in video
+                    Exit time in the video
                     </p>
                     <input type="text" placeholder="minutes" />
                     <input type="text" placeholder="seconds" />
