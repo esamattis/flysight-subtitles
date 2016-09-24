@@ -16,8 +16,9 @@ const formatSubripTime = i => `00:${padZero(2, fullMinutes(i))}:${padZero(2, ful
 const defaultTemplate = `
 Fallrate FALLRATE km/h
 Altitude ALTITUDE m
-Ground speed GROUND_SPEED km/h
+Ground speed SPEED km/h
 Distance DISTANCE m
+Freefall time TIME s
 `.trim();
 
 function renderTemplate(template, context) {
@@ -57,6 +58,7 @@ function generateSubrip(template, gpsData, syncPointIndex, videoMinutes, videoSe
     var subNum = 0;
     var subrip = "";
     var distanceAtExit = null;
+    var exitTime = null;
 
     while (subNum < 1000) {
         syncPointIndex++;
@@ -70,16 +72,22 @@ function generateSubrip(template, gpsData, syncPointIndex, videoMinutes, videoSe
         let templateContext = {
             FALLRATE: Math.round(prev[2][0]),
             ALTITUDE: Math.round(prev[1][0] - dropzoneElevation),
-            GROUND_SPEED: Math.round(prev[3][0]),
+            SPEED: Math.round(prev[3][0]),
             DISTANCE: 0,
+            TIME: 0,
         };
 
         if (exitPointIndex === syncPointIndex) {
             distanceAtExit = totalDistance;
+            exitTime = subStart;
         }
 
         if (distanceAtExit !== null) {
             templateContext.DISTANCE = Math.round(totalDistance - distanceAtExit);
+        }
+
+        if (exitTime !== null) {
+            templateContext.TIME = Math.round((subStart - exitTime) / 1000);
         }
 
         subNum++;
