@@ -1,14 +1,32 @@
-module.exports = {
-    entry: "./client.js",
+var webpack = require("webpack");
+
+var config = {
+    entry: "./src/index.js",
     output: {
-        path: __dirname + "/build",
+        path: "dist",
         filename: "bundle.js",
-        publicPath: "/build/"
+        publicPath: "/dist",
     },
-    devtool: 'source-map',
+    // devtool: "cheap-module-eval-source-map", // faster
+    devtool: "sourceMap",
     module: {
         loaders: [
-            {test: /\.jsx?$/, exclude: /node_modules/, loader: 'babel-loader'}
-        ]
-    }
+            {test: /\.css$/,  loader: "style-loader!css-loader"},
+            {test: /\.png/, loader: "url-loader?mimetype=image/png"},
+            {
+                test: /\.jsx?$/,
+                loader: "babel",
+                exclude: /node_modules/,
+            },
+
+        ],
+    },
+    plugins: [
+        new webpack.DefinePlugin({
+            "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
+        }),
+    ],
 };
+
+
+module.exports = config;
