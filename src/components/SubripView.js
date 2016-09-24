@@ -12,10 +12,11 @@ const fullSeconds = i => Math.floor((i - fullMinutes(i) * 60 * 1000) / 1000);
 const remainingMs = i => i % 1000;
 const formatSubripTime = i => `00:${padZero(2, fullMinutes(i))}:${padZero(2, fullSeconds(i))},${padZero(3, remainingMs(i))}`;
 
-function generateSubrip(gpsData, syncPointIndex, videoMinutes, videoSeconds) {
+function generateSubrip(gpsData, syncPointIndex, videoMinutes, videoSeconds, dropzoneElevation=0) {
     console.log("Generating subrip!");
     videoMinutes = parseInt(videoMinutes, 10);
     videoSeconds = parseFloat(videoSeconds, 10);
+    dropzoneElevation = parseFloat(dropzoneElevation, 10);
 
     var exitPointIndex = syncPointIndex;
     var subStart = videoMinutes * 60 * 1000 + videoSeconds * 1000; // in ms
@@ -51,7 +52,7 @@ function generateSubrip(gpsData, syncPointIndex, videoMinutes, videoSeconds) {
         let subEnd = subStart + duration;
 
         let fallrate = prev[2][0];
-        let altitude = prev[1][0];
+        let altitude = prev[1][0] - dropzoneElevation;
         let groundSpeed = prev[3][0];
         let jumpDistance = 0;
         let totalDistance = point[4];
@@ -96,7 +97,8 @@ var SubripView = React.createClass({
             this.props.gpsData,
             this.props.syncPointIndex,
             this.props.videoMinutes,
-            this.props.videoSeconds
+            this.props.videoSeconds,
+            this.props.dropzoneElevation,
         );
         this.setState({subtitleString, dirty: false});
     },
@@ -130,6 +132,10 @@ var SubripView = React.createClass({
                     </p>
                     <Input stateKey="videoMinutes" type="text" placeholder="minutes" />
                     <Input stateKey="videoSeconds" type="text" placeholder="seconds" />
+                    <p>
+                    Dropzone elevation in meters
+                    </p>
+                    <Input stateKey="dropzoneElevation" type="text" placeholder="0" />
                 </div>
 
                 <p>
@@ -151,6 +157,7 @@ SubripView = connect(
         syncPointIndex: getSyncPointIndex(state),
         videoMinutes: state.videoMinutes,
         videoSeconds: state.videoSeconds,
+        dropzoneElevation: state.dropzoneElevation,
         gpsData: getGpsData(state),
     })
 )(SubripView);
