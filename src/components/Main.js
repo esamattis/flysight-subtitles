@@ -11,6 +11,10 @@ var Main = React.createClass({
                 <h1 style={{textAlign: "center"}}>Flysight to Subrip converter</h1>
                 <Graph />
                 <SubripView />
+                <hr />
+                <p style={{textAlign: "center"}}>
+                    Made by Esa-Matti Suuronen (esa-matti@suuronen.org)
+                </p>
             </div>
         );
     },
