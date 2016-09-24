@@ -94,8 +94,13 @@ var Graph = React.createClass({
         var hasData = this.props.gpsData.length > 0;
         return (
             <div className="Graph" >
-                <input type="file" accept=".csv" onChange={this.handleFile} />
-                {hasData && <button onClick={this.resetZoom}>reset zoom</button>}
+                <p style={{textAlign: "center"}}>
+                    <input type="file" accept=".csv" onChange={this.handleFile} />
+                    {hasData && <button onClick={this.resetZoom}>reset zoom</button>}
+                </p>
+                <p style={{textAlign: "center"}}>
+                    Select the exit point
+                </p>
                 <div className="Graph-wrap" ref="container">
                 </div>
             </div>

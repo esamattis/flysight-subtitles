@@ -85,13 +85,14 @@ function generateSubrip(gpsData, syncPointIndex) {
 
 var SubripView = React.createClass({
     getInitialState() {
-        return {subtitleString: ""};
+        return {subtitleString: "", dirty: false};
     },
 
     handleGenerate(e) {
         e.preventDefault();
         this.setState({
             subtitleString: generateSubrip(this.props.gpsData, this.props.syncPointIndex),
+            dirty: false,
         });
     },
 
@@ -106,19 +107,21 @@ var SubripView = React.createClass({
     },
 
     componentWillReceiveProps() {
-        this.setState({subtitleString: ""});
-    },
-
-    canGenerateSubs() {
-        return !!this.props.syncPointIndex && this.props.gpsData.length > 0;
+        this.setState({dirty: true});
     },
 
     render() {
-        const {subtitleString} = this.state;
+        const {subtitleString, dirty} = this.state;
+        const {syncPointIndex, gpsData} = this.props;
+        const hasGpsData = gpsData.length > 0;
+        const canGenerateSubs = !!syncPointIndex && hasGpsData;
+
+        if (!hasGpsData) {
+            return null;
+        }
 
         return (
             <div style={{width: "400px", margin: "0 auto"}}>
-                <h2>Subrip subtitles</h2>
 
                 <div>
                     <p>
@@ -128,16 +131,17 @@ var SubripView = React.createClass({
                     <input type="text" placeholder="seconds" />
                 </div>
 
-                {this.canGenerateSubs() &&
-                <p>
-                    <button style={{width: "100%", padding: "1em"}} onClick={this.handleGenerate}>generate</button>
-                </p>}
+                {canGenerateSubs &&
+                    <p>
+                        <button style={{width: "100%", padding: "1em"}} onClick={this.handleGenerate}>generate{dirty ? "*" : ""}</button>
+                    </p>}
 
                 {subtitleString &&
-                <div>
-                    <button style={{width: "100%", padding: "1em"}} onClick={this.handleCopy}>copy to clipboard</button>
-                    <textarea readOnly rows="30" style={{width: "100%"}} value={subtitleString} ref={this.getRef} />
-                </div>}
+                    <div>
+                        <h2>The subtitles!</h2>
+                        <button style={{width: "100%", padding: "1em"}} onClick={this.handleCopy}>copy to clipboard</button>
+                        <textarea readOnly rows="30" style={{width: "100%"}} value={subtitleString} ref={this.getRef} />
+                    </div>}
             </div>
         );
     },
