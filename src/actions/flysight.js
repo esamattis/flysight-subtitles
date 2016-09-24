@@ -146,14 +146,18 @@ function generateSubrip(gpsData, syncPointIndex) {
 
         let fallrate = prev[2][0];
         let altitude = prev[1][0];
+        let groundSpeed = prev[3][0];
 
         subNum++;
         subrip += subNum;
         subrip += "\n";
         subrip += `${formatSubripTime(subStart)} --> ${formatSubripTime(subEnd)}`;
         subrip += "\n";
-        subrip += padStart(fallrate.toFixed(1), 5, " ") + " km/h ";
-        subrip += padStart(Math.round(altitude), 4, " ") + " M";
+        subrip += "Fallrate " + fallrate.toFixed(1) + " km/h";
+        subrip += "\n" ;
+        subrip += "Ground speed " + Math.round(groundSpeed) + " km/h";
+        subrip += "\n";
+        subrip += "Altitude " + Math.round(altitude) + " m";
         subrip += "\n\n";
 
         prev = point;
