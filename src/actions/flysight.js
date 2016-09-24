@@ -115,11 +115,30 @@ function generateSubrip(gpsData, syncPointIndex) {
     var videoExitSec = 10;
 
     var subStart = videoExitMin * 60 * 1000 + videoExitSec * 1000; // in ms
-    var subNum = 0;
-    var prev = gpsData[syncPointIndex];
-    var subrip = "";
 
-    while (subNum < 600) {
+    var prev = gpsData[syncPointIndex];
+
+    // Seek to the begining of the data or video
+    while (syncPointIndex !== 0) {
+        syncPointIndex--;
+        let point = gpsData[syncPointIndex];
+        let duration = prev[0].getTime() - point[0].getTime();
+        let newStart = subStart - duration;
+
+        if (newStart < 0) {
+            break;
+        }
+
+        subStart = newStart;
+        prev = point;
+
+
+    }
+
+    prev = gpsData[syncPointIndex];
+    var subNum = 0;
+    var subrip = "";
+    while (subNum < 1000) {
         syncPointIndex++;
         let point = gpsData[syncPointIndex];
         let duration = point[0].getTime() - prev[0].getTime();
