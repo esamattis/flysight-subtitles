@@ -2,6 +2,8 @@ import React from "react";
 import padStart from "lodash/padStart";
 import {connect} from "react-redux";
 
+import Input from "./Input";
+
 import {getSyncPointIndex, getGpsData} from "../actions/flysight";
 
 const padZero = (num, s) => padStart(String(s), num, "0");
@@ -10,13 +12,13 @@ const fullSeconds = i => Math.floor((i - fullMinutes(i) * 60 * 1000) / 1000);
 const remainingMs = i => i % 1000;
 const formatSubripTime = i => `00:${padZero(2, fullMinutes(i))}:${padZero(2, fullSeconds(i))},${padZero(3, remainingMs(i))}`;
 
-function generateSubrip(gpsData, syncPointIndex) {
+function generateSubrip(gpsData, syncPointIndex, videoMinutes, videoSeconds) {
     console.log("Generating subrip!");
-    var videoExitMin = 1;
-    var videoExitSec = 10;
+    videoMinutes = parseInt(videoMinutes, 10);
+    videoSeconds = parseFloat(videoSeconds, 10);
 
     var exitPointIndex = syncPointIndex;
-    var subStart = videoExitMin * 60 * 1000 + videoExitSec * 1000; // in ms
+    var subStart = videoMinutes * 60 * 1000 + videoSeconds * 1000; // in ms
 
     var prev = gpsData[syncPointIndex];
 
@@ -90,10 +92,13 @@ var SubripView = React.createClass({
 
     handleGenerate(e) {
         e.preventDefault();
-        this.setState({
-            subtitleString: generateSubrip(this.props.gpsData, this.props.syncPointIndex),
-            dirty: false,
-        });
+        var subtitleString = generateSubrip(
+            this.props.gpsData,
+            this.props.syncPointIndex,
+            this.props.videoMinutes,
+            this.props.videoSeconds
+        );
+        this.setState({subtitleString, dirty: false});
     },
 
     getRef(el) {
@@ -112,13 +117,9 @@ var SubripView = React.createClass({
 
     render() {
         const {subtitleString, dirty} = this.state;
-        const {syncPointIndex, gpsData} = this.props;
+        const {syncPointIndex, gpsData, videoMinutes, videoSeconds} = this.props;
         const hasGpsData = gpsData.length > 0;
-        const canGenerateSubs = !!syncPointIndex && hasGpsData;
-
-        if (!hasGpsData) {
-            return null;
-        }
+        const canGenerateSubs = !!syncPointIndex && hasGpsData && videoMinutes != null && videoSeconds != null;
 
         return (
             <div style={{width: "400px", margin: "0 auto"}}>
@@ -127,14 +128,13 @@ var SubripView = React.createClass({
                     <p>
                     Exit time in the video
                     </p>
-                    <input type="text" placeholder="minutes" />
-                    <input type="text" placeholder="seconds" />
+                    <Input stateKey="videoMinutes" type="text" placeholder="minutes" />
+                    <Input stateKey="videoSeconds" type="text" placeholder="seconds" />
                 </div>
 
-                {canGenerateSubs &&
-                    <p>
-                        <button style={{width: "100%", padding: "1em"}} onClick={this.handleGenerate}>generate{dirty ? "*" : ""}</button>
-                    </p>}
+                <p>
+                    <button disabled={!canGenerateSubs} style={{width: "100%", padding: "1em"}} onClick={this.handleGenerate}>generate subtitles{dirty ? "*" : ""}</button>
+                </p>
 
                 {subtitleString &&
                     <div>
@@ -149,6 +149,8 @@ var SubripView = React.createClass({
 SubripView = connect(
     state => ({
         syncPointIndex: getSyncPointIndex(state),
+        videoMinutes: state.videoMinutes,
+        videoSeconds: state.videoSeconds,
         gpsData: getGpsData(state),
     })
 )(SubripView);

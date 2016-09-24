@@ -98,9 +98,10 @@ var Graph = React.createClass({
                     <input type="file" accept=".csv" onChange={this.handleFile} />
                     {hasData && <button onClick={this.resetZoom}>reset zoom</button>}
                 </p>
-                <p style={{textAlign: "center"}}>
-                    Select the exit point
-                </p>
+                {hasData &&
+                    <p style={{textAlign: "center"}}>
+                        Select the exit point
+                    </p>}
                 <div className="Graph-wrap" ref="container">
                 </div>
             </div>

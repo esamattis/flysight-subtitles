@@ -7,6 +7,7 @@ import {Provider} from "react-redux";
 import flysightReducer, {loadPreviousGPSData} from "./actions/flysight";
 import storageReducer, {restoreFromStorage, setStorageKey} from "./actions/storage";
 import Main from "./components/Main";
+import {inputReducer} from "./components/Input";
 
 import {composeReducers, thunkMiddleware} from "./utils";
 
@@ -21,6 +22,7 @@ if (process.env.NODE_ENV !== "production") {
 const store = createStore(
     composeReducers(
         flysightReducer,
+        inputReducer,
         storageReducer
     ),
     applyMiddleware(...middleware)
