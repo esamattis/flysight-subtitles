@@ -79,7 +79,7 @@ function parseCSVString(csvString) {
 export function setRawGPSData(csvString, options={}) {
     window.localStorage.csvString = csvString;
     return dispatch => {
-        dispatch({type: "CLEAR_ALL"});
+        dispatch({type: "CLEAR_GPS_DATA"});
         dispatch(parseCSVString(csvString));
     };
 }
@@ -106,8 +106,9 @@ export function addFlysightProps() {
 }
 
 export default function reducer(state={}, action) {
-    if (action.type === "CLEAR_ALL") {
-        return {};
+    if (action.type === "CLEAR_GPS_DATA") {
+        state = update(["inMemoryOnly", "gpsData"], () => [], state);
+        return {...state, graphPosition: null};
     }
 
     if (action.type === "SET_PARSED_GPS_DATA") {
