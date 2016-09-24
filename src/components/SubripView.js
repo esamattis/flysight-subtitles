@@ -1,6 +1,7 @@
 import React from "react";
 import padStart from "lodash/padStart";
 import {connect} from "react-redux";
+import {saveAs} from "file-saver";
 
 import Input from "./Input";
 
@@ -107,6 +108,12 @@ var SubripView = React.createClass({
         this.textarea = el;
     },
 
+    handleDownload(e) {
+        e.preventDefault();
+        var blob = new Blob([this.state.subtitleString], {type: "text/plain;charset=utf-8"});
+        saveAs(blob, this.props.filename + ".srt");
+    },
+
     handleCopy(e) {
         e.preventDefault();
         this.textarea.select();
@@ -119,7 +126,7 @@ var SubripView = React.createClass({
 
     render() {
         const {subtitleString, dirty} = this.state;
-        const {syncPointIndex, gpsData, videoMinutes, videoSeconds} = this.props;
+        const {syncPointIndex, gpsData, videoMinutes, videoSeconds, filename} = this.props;
         const hasGpsData = gpsData.length > 0;
         const canGenerateSubs = !!syncPointIndex && hasGpsData && videoMinutes != null && videoSeconds != null;
 
@@ -145,8 +152,23 @@ var SubripView = React.createClass({
                 {subtitleString &&
                     <div>
                         <h2>The subtitles!</h2>
-                        <button style={{width: "100%", padding: "1em"}} onClick={this.handleCopy}>copy to clipboard</button>
-                        <textarea readOnly rows="30" style={{width: "100%"}} value={subtitleString} ref={this.getRef} />
+                        <p>
+                            Download filename
+                        </p>
+
+                        <Input stateKey="filename" type="text" placeholder="GOPR0123" />
+                        <br />
+                        <small>
+                            Most players can pick up the subtitle file
+                            when it has the same name with the video file.
+                            Do not add extension, .srt will be added automatically.
+                        </small>
+
+                        <p>
+                            <button style={{width: "100%", padding: "1em"}} onClick={this.handleCopy}>Copy to clipboard</button>
+                            {filename && <button style={{width: "100%", padding: "1em"}} onClick={this.handleDownload}>Dowload</button>}
+                            <textarea readOnly rows="15" style={{width: "100%"}} value={subtitleString} ref={this.getRef} />
+                        </p>
                     </div>}
             </div>
         );
@@ -158,6 +180,7 @@ SubripView = connect(
         videoMinutes: state.videoMinutes,
         videoSeconds: state.videoSeconds,
         dropzoneElevation: state.dropzoneElevation,
+        filename: state.filename,
         gpsData: getGpsData(state),
     })
 )(SubripView);
