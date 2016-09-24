@@ -33,7 +33,7 @@ var Graph = React.createClass({
                 var syncPointIndex = get([0, "idx"], point);
                 this.props.setGraphExit({graphPosition: x / 1000, syncPointIndex});
             },
-            labels: [ "time", "altitude", "fallrate", "ground speed"],
+            labels: [ "time", "altitude", "fallrate", "ground speed", "distance"],
             series: {
                 fallrate: {
                     axis: "y2",

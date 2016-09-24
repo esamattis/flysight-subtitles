@@ -27,6 +27,7 @@ function parseRow(row) {
 
 function calculateFlysightData(csvRows) {
     var prev = null;
+    var totalDistance = 0;
 
     return csvRows.slice(2, -1).map(row => {
         var point = parseRow(row);
@@ -54,12 +55,15 @@ function calculateFlysightData(csvRows) {
         var avgError = (prev.vertAccuracy + point.vertAccuracy) / 2.0;
         var avgHorError = (prev.horAccuracy + point.horAccuracy) / 2.0;
 
+        totalDistance += horDistance;
+
         prev = point;
         return [
             point.time,
             [point.altitude, point.vertAccuracy],
             [vertSpeed, avgError],
             [horSpeed, avgHorError],
+            totalDistance,
         ];
     }).filter(Boolean);
 
@@ -114,6 +118,7 @@ function generateSubrip(gpsData, syncPointIndex) {
     var videoExitMin = 1;
     var videoExitSec = 10;
 
+    var exitPointIndex = syncPointIndex;
     var subStart = videoExitMin * 60 * 1000 + videoExitSec * 1000; // in ms
 
     var prev = gpsData[syncPointIndex];
@@ -131,15 +136,17 @@ function generateSubrip(gpsData, syncPointIndex) {
 
         subStart = newStart;
         prev = point;
-
-
     }
 
     prev = gpsData[syncPointIndex];
     var subNum = 0;
     var subrip = "";
+    var distanceAtExit = null;
+
     while (subNum < 1000) {
         syncPointIndex++;
+
+
         let point = gpsData[syncPointIndex];
         let duration = point[0].getTime() - prev[0].getTime();
         let subEnd = subStart + duration;
@@ -147,6 +154,16 @@ function generateSubrip(gpsData, syncPointIndex) {
         let fallrate = prev[2][0];
         let altitude = prev[1][0];
         let groundSpeed = prev[3][0];
+        let jumpDistance = 0;
+        let totalDistance = point[4];
+
+        if (exitPointIndex === syncPointIndex) {
+            distanceAtExit = totalDistance;
+        }
+
+        if (distanceAtExit !== null) {
+            jumpDistance = totalDistance - distanceAtExit;
+        }
 
         subNum++;
         subrip += subNum;
@@ -154,10 +171,12 @@ function generateSubrip(gpsData, syncPointIndex) {
         subrip += `${formatSubripTime(subStart)} --> ${formatSubripTime(subEnd)}`;
         subrip += "\n";
         subrip += "Fallrate " + fallrate.toFixed(1) + " km/h";
-        subrip += "\n" ;
-        subrip += "Ground speed " + Math.round(groundSpeed) + " km/h";
         subrip += "\n";
         subrip += "Altitude " + Math.round(altitude) + " m";
+        subrip += "\n";
+        subrip += "Ground speed " + Math.round(groundSpeed) + " km/h";
+        subrip += "\n" ;
+        subrip += "Distance " + Math.round(jumpDistance) + " m";
         subrip += "\n\n";
 
         prev = point;
