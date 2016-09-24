@@ -99,7 +99,7 @@ var SubripView = React.createClass({
             this.props.syncPointIndex,
             this.props.videoMinutes,
             this.props.videoSeconds,
-            this.props.dropzoneElevation,
+            this.props.dropzoneElevation
         );
         this.setState({subtitleString, dirty: false});
     },
@@ -139,14 +139,27 @@ var SubripView = React.createClass({
                     </p>
                     <Input stateKey="videoMinutes" type="text" placeholder="minutes" />
                     <Input stateKey="videoSeconds" type="text" placeholder="seconds" />
+                    <br />
+                    <small>
+                        You can use fractions of seconds if needed.
+                    </small>
+
                     <p>
                     Dropzone elevation in meters
                     </p>
                     <Input stateKey="dropzoneElevation" type="text" placeholder="0" />
+                    <br />
+                    <small>protip: You can see it from the graph</small>
+
                 </div>
 
                 <p>
-                    <button disabled={!canGenerateSubs} style={{width: "100%", padding: "1em"}} onClick={this.handleGenerate}>generate subtitles{dirty ? "*" : ""}</button>
+                    <button
+                        disabled={!canGenerateSubs}
+                        style={{width: "100%", padding: "1em"}}
+                        onClick={this.handleGenerate}>
+                        Generate!{dirty ? " *" : ""}
+                    </button>
                 </p>
 
                 {subtitleString &&
