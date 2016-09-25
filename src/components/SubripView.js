@@ -216,9 +216,17 @@ var SubripView = React.createClass({
                         <Input stateKey="filename" type="text" placeholder="GOPR0123" />
                         <br />
                         <small>
-                            Most players can pick up the subtitle file
-                            when it has the same name with the video file.
-                            Do not add extension, .srt will be added automatically.
+                            Most players can pick up the subtitle file when
+                            it's in the same directory with video file with
+                            same name.
+
+                            For a player I'd recommend <a href="https://mpv.io/">mpv</a>.
+                            VLC is bit laggy with big subtitle files.
+
+                            <br /><br />
+
+                            Do not add extension, .srt will
+                            be added automatically.
                         </small>
 
                         <p>
