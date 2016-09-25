@@ -1,13 +1,13 @@
 export PATH := node_modules/.bin:$(PATH)
 export SHELL := /bin/bash # Required for OS X for some reason
 
-distfile = dist/bundle.js SDF npm: npm install
+distfile = dist/bundle.js
 
 js: dist-changes-hide
 	NODE_ENV=production webpack -p --progress
 
 server:
-	python -m SimpleHTTPServer
+	python -m SimpleHTTPServer 8080
 
 js-server:
 	webpack-dev-server -d --inline --host 0.0.0.0
