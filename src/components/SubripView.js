@@ -19,6 +19,7 @@ Altitude ALTITUDE m
 Ground speed SPEED km/h
 Distance DISTANCE m
 Freefall time TIME s
+Glide ratio GLIDE
 `.trim();
 
 function renderTemplate(template, context) {
@@ -73,6 +74,7 @@ function generateSubrip(template, gpsData, syncPointIndex, videoMinutes, videoSe
             FALLRATE: Math.round(prev[2][0]),
             ALTITUDE: Math.round(prev[1][0] - dropzoneElevation),
             SPEED: Math.round(prev[3][0]),
+            GLIDE: -1 * ((prev[4] - point[4]) / (prev[1][0] - point[1][0])).toFixed(2),
             DISTANCE: 0,
             TIME: 0,
         };
