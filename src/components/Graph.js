@@ -100,7 +100,7 @@ var Graph = React.createClass({
                 </p>
                 {hasData &&
                     <p style={{textAlign: "center"}}>
-                        Select the exit point
+                        Click on the graph to select exit point
                     </p>}
                 <div className="Graph-wrap" ref="container">
                 </div>
