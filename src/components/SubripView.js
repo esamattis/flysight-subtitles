@@ -61,11 +61,14 @@ function generateSubrip(template, gpsData, syncPointIndex, videoMinutes, videoSe
     var distanceAtExit = null;
     var exitTime = null;
 
-    while (subNum < 1000) {
+    // eslint-disable-next-line
+    while (true) {
         syncPointIndex++;
-
-
         let point = gpsData[syncPointIndex];
+        if (!point) {
+            break;
+        }
+
         let duration = point[0].getTime() - prev[0].getTime();
         let subEnd = subStart + duration;
         let totalDistance = point[4];
@@ -99,6 +102,12 @@ function generateSubrip(template, gpsData, syncPointIndex, videoMinutes, videoSe
         subrip += "\n";
         subrip += renderTemplate(template, templateContext);
         subrip += "\n\n";
+
+
+        // Shall be max freefall time :)
+        if (templateContext.TIME > 5 * 60) {
+            break;
+        }
 
         prev = point;
         subStart = subEnd;
