@@ -5,8 +5,8 @@ import ReactDOM from "react-dom";
 import Dygraph from "dygraphs";
 import {connect} from "react-redux";
 
-import {setInputValue} from "./Input";
-import {addFlysightProps} from "../actions/flysight";
+import {setGraphExit, getGpsData} from "../actions/flysight";
+import Box from "./Box";
 
 var Graph = React.createClass({
 
@@ -14,19 +14,7 @@ var Graph = React.createClass({
         gpsData: PropTypes.array.isRequired,
         graphPosition: PropTypes.number,
         setGraphExit: PropTypes.func.isRequired,
-        setRawGPSData: PropTypes.func.isRequired,
     },
-
-    handleFile(e) {
-        var file = e.target.files[0];
-        var reader = new FileReader();
-        reader.onload = e => {
-            this.props.setRawGPSData(e.target.result);
-            this.props.setInputValue("dataFilename", file.name);
-        };
-        reader.readAsText(file);
-    },
-
 
     createGraph() {
         console.log("creating graph el");
@@ -56,6 +44,10 @@ var Graph = React.createClass({
         });
         this.dygGraph.resize(window.innerWidth, 350);
         this.updateAnnotations();
+    },
+
+    componentDidMount() {
+        this.createGraph();
     },
 
     resetZoom(e) {
@@ -96,23 +88,25 @@ var Graph = React.createClass({
     render() {
         var hasData = this.props.gpsData.length > 0;
         return (
-            <div className="Graph" >
-                <p style={{textAlign: "center"}}>
-                    <input type="file" accept=".csv" onChange={this.handleFile} />
-                    {hasData && <button onClick={this.resetZoom}>reset zoom</button>}
-                </p>
-                {hasData &&
-                    <p style={{textAlign: "center"}}>
-                        Click on the graph to select exit point
-                    </p>}
-                <div className="Graph-wrap" ref="container">
-                </div>
+            <div className="Graph">
+                <Box>
+                    <h3>Pick exit point</h3>
+                </Box>
+                <div className="Graph-wrap" ref="container"></div>
+                <Box>
+                    <button onClick={this.resetZoom}>reset zoom</button>
+                </Box>
             </div>
         );
     },
 });
-Graph = addFlysightProps()(Graph);
-Graph = connect(null, {setInputValue})(Graph);
+Graph = connect(
+        state => ({
+            gpsData: getGpsData(state),
+            graphPosition: state.graphPosition,
+        }),
+        {setGraphExit}
+)(Graph);
 
 
 export default Graph;

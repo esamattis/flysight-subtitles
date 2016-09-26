@@ -9,12 +9,19 @@ const IN_MEMORY_KEY = "inMemoryOnly";
 const RESTORE_FROM_STORAGE = "RESTORE_FROM_STORAGE";
 const SET_STORAGE_KEY = "SET_STORAGE_KEY";
 const SAVE_NOW = "SAVE_NOW";
+const CLEAR_ALL = "CLEAR_ALL";
 
 
 // Action creators
 
 export function setStorageKey(key) {
     return {type: SET_STORAGE_KEY, key};
+}
+
+export function clearAll() {
+    localStorage.clear();
+    window.scrollTo(0,0);
+    return {type: CLEAR_ALL};
 }
 
 export function restoreFromStorage() {
@@ -85,6 +92,8 @@ export default function storageReducer(state, action) {
         return state;
     case SET_STORAGE_KEY:
         return update([IN_MEMORY_KEY, "storageKey"], () => action.key, state);
+    case CLEAR_ALL:
+        return {};
     default:
         _saveDebounced(state);
         return state;

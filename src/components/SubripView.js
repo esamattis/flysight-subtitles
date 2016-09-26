@@ -207,24 +207,27 @@ var SubripView = React.createClass({
 
                 <div>
                     <h3>
-                    Exit time in the video
+                        Exit time in the video
                     </h3>
                     <p>
                         minutes and seconds
                     </p>
                     <Input stateKey="videoMinutes" type="text" placeholder="01" />
-                    <Input stateKey="videoSeconds" type="text" placeholder="5.64" />
+                    <Input stateKey="videoSeconds" type="text" placeholder="2.34" />
                     <br />
                     <small>
                         You can use fractions of seconds if needed.
                     </small>
 
                     <h3>
-                    Dropzone elevation in meters
+                    Dropzone elevation
                     </h3>
+                    <p>
+                        meters
+                    </p>
                     <Input stateKey="dropzoneElevation" type="text" placeholder="0" />
                     <br />
-                    <small>protip: You can see it from the graph</small>
+                    <small>protip: You can see it from the graph on landing</small>
 
                     <h3>
                     Subtitle template

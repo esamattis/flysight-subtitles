@@ -1,4 +1,3 @@
-import {connect} from "react-redux";
 import update from "lodash/fp/update";
 import getOr from "lodash/fp/getOr";
 import get from "lodash/fp/get";
@@ -6,7 +5,7 @@ import get from "lodash/fp/get";
 import Papa from "papaparse";
 import distance from "gps-distance";
 
-function setGraphExit(payload) {
+export function setGraphExit(payload) {
     return {type: "SET_GRAPH_EXIT", ...payload};
 }
 
@@ -76,7 +75,7 @@ function parseCSVString(csvString) {
     };
 }
 
-export function setRawGPSData(csvString, options={}) {
+export function setRawGPSData(csvString) {
     window.localStorage.csvString = csvString;
     return dispatch => {
         dispatch({type: "CLEAR_GPS_DATA"});
@@ -95,15 +94,6 @@ export function loadPreviousGPSData() {
 export const getGpsData = getOr([], ["inMemoryOnly", "gpsData"]);
 export const getSyncPointIndex = get("syncPointIndex");
 
-export function addFlysightProps() {
-    return connect(
-        state => ({
-            gpsData: getGpsData(state),
-            graphPosition: state.graphPosition,
-        }),
-        {setRawGPSData, setGraphExit}
-    );
-}
 
 export default function reducer(state={}, action) {
     if (action.type === "CLEAR_GPS_DATA") {
