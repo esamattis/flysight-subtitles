@@ -1,5 +1,6 @@
 import React from "react";
 import padStart from "lodash/padStart";
+import debounce from "lodash/fp/debounce";
 import {connect} from "react-redux";
 import {saveAs} from "file-saver";
 
@@ -117,12 +118,17 @@ function generateSubrip(template, gpsData, syncPointIndex, videoMinutes, videoSe
 }
 
 var SubripView = React.createClass({
+    componentWillMount() {
+        this.debouncedGenerate = debounce(1000, this.generate);
+    },
     getInitialState() {
         return {subtitleString: "", dirty: false};
     },
 
-    handleGenerate(e) {
-        e.preventDefault();
+    generate(cb) {
+        if (!this.canGenerateSubs()) {
+            return;
+        }
         var subtitleString = generateSubrip(
             this.props.subtitleTemplate,
             this.props.gpsData,
@@ -131,7 +137,7 @@ var SubripView = React.createClass({
             this.props.videoSeconds,
             this.props.dropzoneElevation
         );
-        this.setState({subtitleString, dirty: false});
+        this.setState({subtitleString, dirty: false}, cb);
     },
 
     getRef(el) {
@@ -140,33 +146,42 @@ var SubripView = React.createClass({
 
     handleDownload(e) {
         e.preventDefault();
+        this.generate();
         var blob = new Blob([this.state.subtitleString], {type: "text/plain;charset=utf-8"});
         saveAs(blob, this.props.filename + ".srt");
     },
 
     handleCopy(e) {
         e.preventDefault();
-        this.textarea.select();
-        console.log("copy", document.execCommand("copy"));
+        this.generate(() => {
+            this.textarea.select();
+            console.log("copy", document.execCommand("copy"));
+        });
     },
 
     componentWillReceiveProps() {
+        this.debouncedGenerate();
         this.setState({dirty: true});
+    },
+
+    canGenerateSubs() {
+        const {syncPointIndex, gpsData, videoMinutes, videoSeconds} = this.props;
+        const hasGpsData = gpsData.length > 0;
+        return !!syncPointIndex && hasGpsData && videoMinutes != null && videoSeconds != null;
     },
 
     render() {
         const {subtitleString, dirty} = this.state;
-        const {syncPointIndex, gpsData, videoMinutes, videoSeconds, filename} = this.props;
-        const hasGpsData = gpsData.length > 0;
-        const canGenerateSubs = !!syncPointIndex && hasGpsData && videoMinutes != null && videoSeconds != null;
+        const {filename} = this.props;
+        const canGenerateSubs = this.canGenerateSubs();
 
         return (
             <div style={{width: "400px", margin: "0 auto"}}>
 
                 <div>
-                    <p>
+                    <h3>
                     Exit time in the video
-                    </p>
+                    </h3>
                     <Input stateKey="videoMinutes" type="text" placeholder="minutes" />
                     <Input stateKey="videoSeconds" type="text" placeholder="seconds" />
                     <br />
@@ -174,16 +189,16 @@ var SubripView = React.createClass({
                         You can use fractions of seconds if needed.
                     </small>
 
-                    <p>
+                    <h3>
                     Dropzone elevation in meters
-                    </p>
+                    </h3>
                     <Input stateKey="dropzoneElevation" type="text" placeholder="0" />
                     <br />
                     <small>protip: You can see it from the graph</small>
 
-                    <p>
+                    <h3>
                     Subtitle template
-                    </p>
+                    </h3>
                     <Input
                         stateKey="subtitleTemplate"
                         style={{width: "100%"}}
@@ -193,42 +208,38 @@ var SubripView = React.createClass({
                         rows="6"
 
                        />
+
+                    <h3>
+                        Download filename
+                    </h3>
+                    <Input stateKey="filename" type="text" placeholder="GOPR0123" />
                     <br />
+                    <small>
+                        Most players can pick up the subtitle file when
+                        it's in the same directory with video file with
+                        same name.
+
+                        For a player I'd recommend <a href="https://mpv.io/">mpv</a>.
+                        VLC is bit laggy with big subtitle files.
+
+                        <br /><br />
+
+                        Do not add extension, .srt will
+                        be added automatically.
+                    </small>
 
                 </div>
 
-                <p>
-                    <button
-                        disabled={!canGenerateSubs}
-                        style={{width: "100%", padding: "1em"}}
-                        onClick={this.handleGenerate}>
-                        Generate!{dirty ? " *" : ""}
-                    </button>
-                </p>
+                <h2>The subtitles!</h2>
+
+                <i>
+                    {!canGenerateSubs && "Missing some data. Exit point from the graph?"}
+                    {(canGenerateSubs && subtitleString && dirty) && "Dirty! Compiling soon."}
+                    {(canGenerateSubs && !subtitleString) && "Compiling!"}
+                </i>
 
                 {subtitleString &&
                     <div>
-                        <h2>The subtitles!</h2>
-                        <p>
-                            Download filename
-                        </p>
-
-                        <Input stateKey="filename" type="text" placeholder="GOPR0123" />
-                        <br />
-                        <small>
-                            Most players can pick up the subtitle file when
-                            it's in the same directory with video file with
-                            same name.
-
-                            For a player I'd recommend <a href="https://mpv.io/">mpv</a>.
-                            VLC is bit laggy with big subtitle files.
-
-                            <br /><br />
-
-                            Do not add extension, .srt will
-                            be added automatically.
-                        </small>
-
                         <p>
                             <button style={{width: "100%", padding: "1em"}} onClick={this.handleCopy}>Copy to clipboard</button>
                             {filename && <button style={{width: "100%", padding: "1em"}} onClick={this.handleDownload}>Dowload</button>}
