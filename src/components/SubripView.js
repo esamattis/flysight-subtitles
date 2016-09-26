@@ -255,11 +255,11 @@ var SubripView = React.createClass({
                     {(canGenerateSubs && !subtitleString) && "Compiling!"}
                 </i>
 
-                {subtitleString &&
+                {canGenerateSubs && subtitleString &&
                     <div>
                         <p>
                             <button style={{width: "100%", padding: "1em"}} onClick={this.handleCopy}>Copy to clipboard</button>
-                            {filename && <button style={{width: "100%", padding: "1em"}} onClick={this.handleDownload}>Dowload</button>}
+                            <button style={{width: "100%", padding: "1em"}} onClick={this.handleDownload}>Dowload</button>
                             <textarea readOnly rows="15" style={{width: "100%"}} value={subtitleString} ref={this.getRef} />
                         </p>
                     </div>}
