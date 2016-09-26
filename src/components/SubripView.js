@@ -1,5 +1,6 @@
 import React from "react";
 import padStart from "lodash/padStart";
+import padEnd from "lodash/padEnd";
 import debounce from "lodash/fp/debounce";
 import {connect} from "react-redux";
 import {saveAs} from "file-saver";
@@ -22,6 +23,14 @@ Distance DISTANCE m
 Freefall time TIME s
 Glide ratio GLIDE
 `.trim();
+
+function padDecimalZero(num) {
+    var [i, d] = String(num).split(".");
+    if (!d) {
+        return i + ".00";
+    }
+    return i + "." + padEnd(d, 2, "0");
+}
 
 function renderTemplate(template, context) {
     var keys = Object.keys(context);
@@ -81,12 +90,13 @@ function generateSubrip(template, gpsData, syncPointIndex, videoMinutes, videoSe
         let duration = point[0].getTime() - prev[0].getTime();
         let subEnd = subStart + duration;
         let totalDistance = point[4];
+        let glide = -1 * ((prev[4] - point[4]) / (prev[1][0] - point[1][0])).toFixed(2);
 
         let templateContext = {
             FALLRATE: Math.round(prev[2][0]),
             ALTITUDE: Math.round(prev[1][0] - dropzoneElevation),
             SPEED: Math.round(prev[3][0]),
-            GLIDE: -1 * ((prev[4] - point[4]) / (prev[1][0] - point[1][0])).toFixed(2),
+            GLIDE: padDecimalZero(glide, 2),
             DISTANCE: 0,
             TIME: 0,
         };
