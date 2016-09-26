@@ -108,7 +108,7 @@ export function addFlysightProps() {
 export default function reducer(state={}, action) {
     if (action.type === "CLEAR_GPS_DATA") {
         state = update(["inMemoryOnly", "gpsData"], () => [], state);
-        return {...state, graphPosition: null};
+        return {...state, graphPosition: null, syncPointIndex: null};
     }
 
     if (action.type === "SET_PARSED_GPS_DATA") {
