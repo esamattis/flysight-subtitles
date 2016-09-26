@@ -4,6 +4,10 @@ import update from "lodash/fp/update";
 import omit from "lodash/fp/omit";
 import {connect} from "react-redux";
 
+export function setInputValue(key, value) {
+    return {type: "INPUT_VALUE", value, stateKey: key};
+}
+
 var Input = React.createClass({
     render() {
         var Component = this.props.component || "input";
@@ -16,7 +20,7 @@ Input = connect(
     }),
     (dispatch, ownProps) => ({
         onChange(e) {
-            dispatch({type: "INPUT_VALUE", value: e.target.value, stateKey: ownProps.stateKey});
+            dispatch(setInputValue(ownProps.stateKey, e.target.value));
         },
     })
 )(Input);
@@ -28,7 +32,6 @@ export function inputReducer(state, action) {
     }
 
     return state;
-
 }
 
 export default Input;

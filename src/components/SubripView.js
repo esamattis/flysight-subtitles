@@ -29,6 +29,14 @@ function renderTemplate(template, context) {
     return template.replace(re, k => context[k]).trim();
 }
 
+function removeExtension(s, ext) {
+    if (ext) {
+        return s.replace(new RegExp(`\.${ext}$`), "");
+    }
+
+    return s.replace(/\.[^/.]+$/, "");
+}
+
 function generateSubrip(template, gpsData, syncPointIndex, videoMinutes, videoSeconds, dropzoneElevation=0) {
     console.log("Generating subrip!");
     template = String(template || "").trim() || defaultTemplate.trim();
@@ -144,11 +152,25 @@ var SubripView = React.createClass({
         this.textarea = el;
     },
 
+    getDownloadFilename() {
+        const {dataFilename, filename} = this.props;
+
+        if (filename) {
+            return removeExtension(filename, "srt") + ".srt";
+        }
+
+        if (dataFilename) {
+            return removeExtension(dataFilename) + ".srt";
+        }
+
+        return "flysight.srt";
+    },
+
     handleDownload(e) {
         e.preventDefault();
         this.generate();
         var blob = new Blob([this.state.subtitleString], {type: "text/plain;charset=utf-8"});
-        saveAs(blob, this.props.filename + ".srt");
+        saveAs(blob, this.getDownloadFilename());
     },
 
     handleCopy(e) {
@@ -172,7 +194,7 @@ var SubripView = React.createClass({
 
     render() {
         const {subtitleString, dirty} = this.state;
-        const {filename} = this.props;
+        const {dataFilename} = this.props;
         const canGenerateSubs = this.canGenerateSubs();
 
         return (
@@ -212,7 +234,7 @@ var SubripView = React.createClass({
                     <h3>
                         Download filename
                     </h3>
-                    <Input stateKey="filename" type="text" placeholder="GOPR0123" />
+                    <Input stateKey="filename" type="text" placeholder={dataFilename ? removeExtension(dataFilename) : "GOPR0123"} />
                     <br />
                     <small>
                         Most players can pick up the subtitle file when
@@ -221,11 +243,6 @@ var SubripView = React.createClass({
 
                         For a player I'd recommend <a href="https://mpv.io/">mpv</a>.
                         VLC is bit laggy with big subtitle files.
-
-                        <br /><br />
-
-                        Do not add extension, .srt will
-                        be added automatically.
                     </small>
 
                 </div>
@@ -257,6 +274,7 @@ SubripView = connect(
         videoSeconds: state.videoSeconds,
         dropzoneElevation: state.dropzoneElevation,
         filename: state.filename,
+        dataFilename: state.dataFilename,
         subtitleTemplate: state.subtitleTemplate,
         gpsData: getGpsData(state),
     })

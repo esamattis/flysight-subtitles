@@ -3,7 +3,9 @@ import get from "lodash/fp/get";
 import React, {PropTypes} from "react";
 import ReactDOM from "react-dom";
 import Dygraph from "dygraphs";
+import {connect} from "react-redux";
 
+import {setInputValue} from "./Input";
 import {addFlysightProps} from "../actions/flysight";
 
 var Graph = React.createClass({
@@ -20,6 +22,7 @@ var Graph = React.createClass({
         var reader = new FileReader();
         reader.onload = e => {
             this.props.setRawGPSData(e.target.result);
+            this.props.setInputValue("dataFilename", file.name);
         };
         reader.readAsText(file);
     },
@@ -109,6 +112,7 @@ var Graph = React.createClass({
     },
 });
 Graph = addFlysightProps()(Graph);
+Graph = connect(null, {setInputValue})(Graph);
 
 
 export default Graph;
