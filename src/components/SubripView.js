@@ -40,8 +40,8 @@ function removeExtension(s, ext) {
 function generateSubrip(template, gpsData, syncPointIndex, videoMinutes, videoSeconds, dropzoneElevation=0) {
     console.log("Generating subrip!");
     template = String(template || "").trim() || defaultTemplate.trim();
-    videoMinutes = parseInt(videoMinutes, 10);
-    videoSeconds = parseFloat(videoSeconds, 10);
+    videoMinutes = parseInt(videoMinutes, 10) || 0;
+    videoSeconds = parseFloat(videoSeconds, 10) || 0;
     dropzoneElevation = parseFloat(dropzoneElevation, 10);
 
     var exitPointIndex = syncPointIndex;
@@ -187,9 +187,9 @@ var SubripView = React.createClass({
     },
 
     canGenerateSubs() {
-        const {syncPointIndex, gpsData, videoMinutes, videoSeconds} = this.props;
+        const {syncPointIndex, gpsData} = this.props;
         const hasGpsData = gpsData.length > 0;
-        return !!syncPointIndex && hasGpsData && videoMinutes != null && videoSeconds != null;
+        return !!syncPointIndex && hasGpsData;
     },
 
     resetTemplate(e) {
@@ -209,8 +209,11 @@ var SubripView = React.createClass({
                     <h3>
                     Exit time in the video
                     </h3>
-                    <Input stateKey="videoMinutes" type="text" placeholder="minutes" />
-                    <Input stateKey="videoSeconds" type="text" placeholder="seconds" />
+                    <p>
+                        minutes and seconds
+                    </p>
+                    <Input stateKey="videoMinutes" type="text" placeholder="01" />
+                    <Input stateKey="videoSeconds" type="text" placeholder="5.64" />
                     <br />
                     <small>
                         You can use fractions of seconds if needed.
