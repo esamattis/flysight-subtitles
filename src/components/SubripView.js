@@ -4,7 +4,7 @@ import debounce from "lodash/fp/debounce";
 import {connect} from "react-redux";
 import {saveAs} from "file-saver";
 
-import Input from "./Input";
+import Input, {setInputValue} from "./Input";
 
 import {getSyncPointIndex, getGpsData} from "../actions/flysight";
 
@@ -192,6 +192,11 @@ var SubripView = React.createClass({
         return !!syncPointIndex && hasGpsData && videoMinutes != null && videoSeconds != null;
     },
 
+    resetTemplate(e) {
+        e.preventDefault();
+        this.props.setInputValue("subtitleTemplate", defaultTemplate);
+    },
+
     render() {
         const {subtitleString, dirty} = this.state;
         const {dataFilename} = this.props;
@@ -228,8 +233,8 @@ var SubripView = React.createClass({
                         type="text"
                         placeholder={defaultTemplate}
                         rows="6"
-
                        />
+                    <a href="#" onClick={this.resetTemplate}>use default</a>
 
                     <h3>
                         Download filename
@@ -277,7 +282,8 @@ SubripView = connect(
         dataFilename: state.dataFilename,
         subtitleTemplate: state.subtitleTemplate,
         gpsData: getGpsData(state),
-    })
+    }),
+    {setInputValue}
 )(SubripView);
 
 export default SubripView;
