@@ -29,6 +29,12 @@ export function connectLean(options=plain) {
         options = {...options, mapState: justEmpty};
     }
 
+    var actionSuffix = options.scope;
+    if (Array.isArray(actionSuffix)) {
+        actionSuffix = actionSuffix.join(".");
+    }
+
+
     const withDefaults = options.defaults ? s => ({...options.defaults, ...s}) : pass;
 
     var connector = connect(
@@ -38,20 +44,20 @@ export function connectLean(options=plain) {
         },
         dispatch => {
 
-            const dispatchUpdate = (name, update) => {
+            const dispatchUpdate = (updateName, update) => {
                 if (update && typeof update._thunk === "function") {
-                    return update._thunk(dispatchUpdate.bind(null, name), options.updates);
+                    return update._thunk(dispatchUpdate.bind(null, updateName), options.updates);
                 }
 
                 dispatch({
-                    type: "LEAN_UPDATE" + withSlash(options.scope) + withSlash(name),
+                    type: "LEAN_UPDATE" + withSlash(actionSuffix) + withSlash(updateName),
                     update,
                     withDefaults,
                     scope: options.scope,
                 });
             };
 
-            const bindDispatch = (updateFn, name) => (...args) => dispatchUpdate(name, updateFn(...args));
+            const bindDispatch = (updateFn, updateName) => (...args) => dispatchUpdate(updateName, updateFn(...args));
 
             return mapValuesWithKey(bindDispatch, options.updates);
         }
