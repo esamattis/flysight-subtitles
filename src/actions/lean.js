@@ -2,7 +2,6 @@
 import {connect} from "react-redux";
 import getOr from "lodash/fp/getOr";
 import updateIn from "lodash/fp/update";
-import merge from "lodash/fp/merge";
 import mapValues from "lodash/fp/mapValues";
 import updateObject from "updeep";
 const mapValuesWithKey = mapValues.convert({cap: false});
@@ -14,6 +13,9 @@ const getDefault = getOr(plain);
 const pass = o => o;
 const withSlash = s => s ? ("/" + s) : "";
 
+export function thunk(cb) {
+    return {_thunk: cb};
+}
 
 export function connectLean(options=plain) {
 
@@ -27,7 +29,7 @@ export function connectLean(options=plain) {
         options = {...options, mapState: justEmpty};
     }
 
-    const withDefaults = options.defaults ? merge(options.defaults) : pass;
+    const withDefaults = options.defaults ? s => ({...options.defaults, ...s}) : pass;
 
     var connector = connect(
         fullState => {
@@ -36,14 +38,20 @@ export function connectLean(options=plain) {
         },
         dispatch => {
 
-            const bindDispatch = (updateFn, name) => (...args) => {
+            const dispatchUpdate = (name, update) => {
+                if (update && typeof update._thunk === "function") {
+                    return update._thunk(dispatchUpdate.bind(null, name), options.updates);
+                }
+
                 dispatch({
                     type: "LEAN_UPDATE" + withSlash(options.scope) + withSlash(name),
-                    update: updateFn(...args),
+                    update,
                     withDefaults,
                     scope: options.scope,
                 });
             };
+
+            const bindDispatch = (updateFn, name) => (...args) => dispatchUpdate(name, updateFn(...args));
 
             return mapValuesWithKey(bindDispatch, options.updates);
         }
