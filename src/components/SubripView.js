@@ -1,12 +1,13 @@
 import React from "react";
 import debounce from "lodash/fp/debounce";
-import {connect} from "react-redux";
 import {saveAs} from "file-saver";
 
-import Input, {setInputValue} from "./Input";
 
-import {getSyncPointIndex, getGpsData} from "../actions/flysight";
+import {connectLean} from "../actions/lean";
 import generateSubrip from "../generateSubrip";
+
+import {connectGraphData} from "./Graph";
+import {connectFile} from "./File";
 
 function removeExtension(s, ext) {
     if (ext) {
@@ -39,7 +40,7 @@ var SubripView = React.createClass({
             return;
         }
         var subtitleString = generateSubrip(
-            this.props.subtitleTemplate,
+            this.props.subtitleTemplate || defaultTemplate,
             this.props.gpsData,
             this.props.syncPointIndex,
             this.props.videoMinutes,
@@ -93,14 +94,9 @@ var SubripView = React.createClass({
         return !!syncPointIndex && hasGpsData;
     },
 
-    resetTemplate(e) {
-        e.preventDefault();
-        this.props.setInputValue("subtitleTemplate", defaultTemplate);
-    },
-
     render() {
         const {subtitleString, dirty} = this.state;
-        const {dataFilename} = this.props;
+        const {filename, dataFilename, videoMinutes, videoSeconds, dropzoneElevation, subtitleTemplate} = this.props;
         const canGenerateSubs = this.canGenerateSubs();
 
         return (
@@ -113,8 +109,10 @@ var SubripView = React.createClass({
                     <p>
                         minutes and seconds
                     </p>
-                    <Input stateKey="videoMinutes" type="text" placeholder="01" />
-                    <Input stateKey="videoSeconds" type="text" placeholder="2.34" />
+
+                    <input onChange={this.props.handleVideoMinutes} value={videoMinutes} type="text" placeholder="01" />
+                    <input onChange={this.props.handleVideoSeconds} value={videoSeconds} type="text" placeholder="2.34" />
+
                     <br />
                     <small>
                         You can use fractions of seconds if needed.
@@ -126,27 +124,27 @@ var SubripView = React.createClass({
                     <p>
                         meters
                     </p>
-                    <Input stateKey="dropzoneElevation" type="text" placeholder="0" />
+                    <input onChange={this.props.handleDropzoneElevation} value={dropzoneElevation} type="text" placeholder="0" />
                     <br />
                     <small>protip: You can see it from the graph on landing</small>
 
                     <h3>
                     Subtitle template
                     </h3>
-                    <Input
-                        stateKey="subtitleTemplate"
+                    <textarea
+                        value={subtitleTemplate}
+                        onChange={this.props.handleSubtitleTemplate}
                         style={{width: "100%"}}
-                        component="textarea"
                         type="text"
                         placeholder={defaultTemplate}
                         rows="6"
                        />
-                    <a href="#" onClick={this.resetTemplate}>use default</a>
+                    <a href="#" onClick={this.props.setDefaultSubtitleTemplate}>use default</a>
 
                     <h3>
                         Download filename
                     </h3>
-                    <Input stateKey="filename" type="text" placeholder={dataFilename ? removeExtension(dataFilename) : "GOPR0123"} />
+                    <input value={filename} onChange={this.props.handleFilename} type="text" placeholder={dataFilename ? removeExtension(dataFilename) : "GOPR0123"} />
                     <br />
                     <small>
                         Most players can pick up the subtitle file when
@@ -179,18 +177,42 @@ var SubripView = React.createClass({
         );
     },
 });
-SubripView = connect(
-    state => ({
-        syncPointIndex: getSyncPointIndex(state),
-        videoMinutes: state.videoMinutes,
-        videoSeconds: state.videoSeconds,
-        dropzoneElevation: state.dropzoneElevation,
-        filename: state.filename,
-        dataFilename: state.dataFilename,
-        subtitleTemplate: state.subtitleTemplate,
-        gpsData: getGpsData(state),
-    }),
-    {setInputValue}
-)(SubripView);
+SubripView = connectLean({
+    scope: "options",
+    defaults: {
+        videoMinutes: 0,
+        videoSeconds: 0,
+        dropzoneElevation: 0,
+        subtitleTemplate: defaultTemplate,
+        filename: "",
+    },
+    updates: {
+        handleDropzoneElevation(e) {
+            return {dropzoneElevation: e.target.value};
+        },
+        handleVideoMinutes(e) {
+            return {videoMinutes: e.target.value};
+        },
+        handleVideoSeconds(e) {
+            return {videoSeconds: e.target.value};
+        },
+        handleSubtitleTemplate(e) {
+            return {subtitleTemplate: e.target.value};
+        },
+        handleFilename(e) {
+            return {filename: e.target.value};
+        },
+        setDefaultSubtitleTemplate(e) {
+            if (e) {
+                e.preventDefault();
+            }
+            return {subtitleTemplate: defaultTemplate};
+        },
+    },
+})(SubripView);
+
+SubripView = connectGraphData(SubripView);
+SubripView = connectFile(SubripView);
+
 
 export default SubripView;

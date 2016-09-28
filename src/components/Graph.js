@@ -3,10 +3,11 @@ import get from "lodash/fp/get";
 import React, {PropTypes} from "react";
 import ReactDOM from "react-dom";
 import Dygraph from "dygraphs";
-import {connect} from "react-redux";
 
-import {setGraphExit, getGpsData} from "../actions/flysight";
+import {connectLean} from "../actions/lean";
+
 import Box from "./Box";
+import {connectFile} from "./File";
 
 var Graph = React.createClass({
 
@@ -21,8 +22,10 @@ var Graph = React.createClass({
         var el = ReactDOM.findDOMNode(this.refs.container);
         this.dygGraph = new Dygraph(el, this.props.gpsData, {
             clickCallback: (e, x, point) => {
-                var syncPointIndex = get([0, "idx"], point);
-                this.props.setGraphExit({graphPosition: x / 1000, syncPointIndex});
+                this.props.setGraphExit({
+                    graphPosition: x / 1000,
+                    syncPointIndex: get([0, "idx"], point),
+                });
             },
             labels: [ "time", "altitude", "fallrate", "ground speed", "distance"],
             series: {
@@ -86,7 +89,6 @@ var Graph = React.createClass({
     },
 
     render() {
-        var hasData = this.props.gpsData.length > 0;
         return (
             <div className="Graph">
                 <Box>
@@ -100,13 +102,17 @@ var Graph = React.createClass({
         );
     },
 });
-Graph = connect(
-        state => ({
-            gpsData: getGpsData(state),
-            graphPosition: state.graphPosition,
-        }),
-        {setGraphExit}
-)(Graph);
+
+export const connectGraphData = connectLean({
+    scope: "graph",
+    updates: {
+        setGraphExit({graphPosition, syncPointIndex}) {
+            return {graphPosition, syncPointIndex};
+        },
+    },
+});
+Graph = connectGraphData(Graph);
+Graph = connectFile(Graph);
 
 
 export default Graph;

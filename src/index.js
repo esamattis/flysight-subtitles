@@ -4,8 +4,8 @@ import ReactDOM from "react-dom";
 import {createStore, applyMiddleware} from "redux";
 import {Provider} from "react-redux";
 
-import flysightReducer, {loadPreviousGPSData} from "./actions/flysight";
 import storageReducer, {restoreFromStorage, setStorageKey} from "./actions/storage";
+import leanReducer from "./actions/lean";
 import Main from "./components/Main";
 import {inputReducer} from "./components/Input";
 
@@ -21,17 +21,14 @@ if (process.env.NODE_ENV !== "production") {
 
 const store = createStore(
     composeReducers(
-        flysightReducer,
         inputReducer,
+        leanReducer,
         storageReducer
     ),
     applyMiddleware(...middleware)
 );
 store.dispatch(setStorageKey("flysight"));
 store.dispatch(restoreFromStorage());
-setTimeout(() => {
-    store.dispatch(loadPreviousGPSData());
-}, 0);
 window.getState = store.getState;
 
 function Root() {
