@@ -1,5 +1,6 @@
 import React from "react";
 import Papa from "papaparse";
+import FileDrop from "react-file-drop";
 
 import analyzeFlysightData from "../analyzeFlysightData";
 import {connectLean, thunk} from "../actions/lean";
@@ -14,11 +15,17 @@ var File = React.createClass({
 
     render() {
         return (
-            <div>
+            <div className="File">
                 <h3>Select FlySight data file</h3>
                 <p>
                     <input type="file" accept=".csv" onChange={this.props.handleFiles} />
                 </p>
+                <div style={{width: "100%", padding: 10, backgroundColor: "silver", textAlign: "center"}}>
+                    <p>Or drag and drop one here.</p>
+                    <FileDrop frame={document} onFrameDrop={this.props.handleFiles} >
+                        <p>Drop it!</p>
+                    </FileDrop>
+                </div>
             </div>
         );
     },
@@ -39,7 +46,9 @@ File = connectLean({
     updates: {
         handleFiles(e) {
             return thunk((update, {parseRawData}) => {
-                var file = e.target.files[0];
+                var files = e.dataTransfer ? e.dataTransfer.files : e.target.files;
+                var file = files[0];
+
                 update({
                     graph: {
                         dataFilename: file.name,
